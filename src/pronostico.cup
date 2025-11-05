@@ -1,0 +1,182 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+parser code {:
+    class Partido {
+        int nro;
+        String fecha;
+        String estadio;
+        String equipoLocal;
+        int golesLocal;
+        String equipoVisitante;
+        int golesVisitante;
+        String grupo;
+        List<String> equipos = new ArrayList<>();
+    }
+
+
+
+
+    class Participante {
+        String nombre;
+        String apellido;
+        String mail;
+        Map<Integer, String> pronosticos = new HashMap<>();
+        List<Integer> marcados = new ArrayList<>();
+    }
+
+
+    List<Partido> partidos = new ArrayList<>();
+    Map<String, List<String>> series = new HashMap<>();
+    List<Participante> participantes = new ArrayList<>();
+
+
+
+
+
+
+
+
+     //reportes de errores
+
+
+    public void report_error(String message, Object info) {
+        StringBuffer m = new StringBuffer("Error");
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            if (s.left >= 0) {
+                m.append(" en línea "+(s.left+1));
+                if (s.right >= 0)
+                    m.append(", columna "+(s.right+1));
+            }
+        }
+        m.append(" : "+message);
+        System.err.println(m);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        System.exit(1);
+    }
+
+
+
+:};
+
+
+terminal CAMPEONATO, FIXTURE, SERIE, PRE_GRUPO, PRE_EQUIPOS,
+         CORCHETE_IZQ, CORCHETE_DER, COMA, NRO_PARTIDO, GUION,
+         SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA;
+
+terminal String TORNEO, LETRA_GRUPO, EQUIPO, ESTADIO, HORA, FECHA, NOMBRE, APELLIDO, EMAIL, QSTRING;
+terminal Integer NUMERO, RESULTADO;
+
+
+non terminal Object inicio, campeonato, fixture, partido, serie, participante, pronosticos, pronostico;
+
+
+start with inicio;
+
+
+inicio ::= campeonato fixture particpantes
+    {:System.out.println("SE COMPLETO EL ANALISIS FIRMEEEE");
+
+
+
+    :};
+
+campeonato ::= CAMPEONATO TORENO:t
+
+    {:
+        System.out.println("SE ESTA JUGANDO UN: " + t);
+
+
+    :};
+
+fixture::= FIXTURE fixture_partidos
+    {:
+        System.out.println("SE COMPLETO EL FIXTURE");
+
+    :};
+
+fixture_partidos::= fixture_partidos partido|partido;
+
+partido ::= NRO_PARTIDO DOSPUNTOS NUMERO:n
+            FECHA:f GUION QSTRING:e
+            EQUIPO:loc RESULTADO:g1 GUION EQUIPO:vis RESULTADO:g2
+            SERIE QSTRING:g
+            PRE_EQUIPOS CORCHETE_IZQ EQUIPO1:e1 COMA EQUIPO2:e2 COMA EQUIPO:e3 COMA EQUIPO:e4 CORCHETE_DER
+
+            {:
+            Partido p = new Partido();
+            p.nro = n;
+            p.fecha = f;
+            p.estadio = e;
+            p.equipoLocal = loc;
+            p.golesLocal = g1;
+            p.equipoVisitante = vis;
+            p.golesVisitante = g2;p.grupo = g;
+            p.equipos.addAll(Arrays.asList(e1,e2,e3,e4));
+            partidos.add(p);
+            series.put(g, p.equipos);
+
+            System.out.println("SE AGREGO UN NUEVO PARTIDOOO");
+
+            :};
+
+
+participantes ::= participantes participante|participante;
+
+
+
+//a partir de aca ya no tengo mucha idea que esta pasando
+
+participante::= PRE_PARTICIPANTE NOMBRE:n APELLIDO:a EMAIL:mail
+                PRONOSTICOS pronosticos
+                {:
+                Participante p = new Participante();
+                p.nombre = n;
+                p.apellido = a;
+                p.email = mail;
+                p.pronosticos.putAll((Map<Integer,String>)RESULT.get("pronosticos"));
+                p.marcados.addAll((List<Integer>)RESULT.get("marcados"));
+
+                if (p.marcados.size() > 4)
+                    report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
+
+                participantes.add(p);
+                System.out.println("👤 Participante agregado: " + n + " " + a + " (" + p.marcados.size() + " marcados)");
+                :};
+
+
+pronosticos ::= pronosticos pronostico
+                {:
+                    Map<Integer,String> ps = (Map<Integer,String>)$1;
+                    List<Integer> marcados = (List<Integer>)$2.get("marcados");
+                    ps.putAll((Map<Integer,String>)$2.get("pronosticos"));
+                    ((Map<String,Object>)RESULT).put("pronosticos", ps);
+                    ((Map<String,Object>)RESULT).put("marcados", marcados);
+                :}
+              | pronostico;
+
+pronostico ::= NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador
+               {:
+                    Map<String,Object> result = new HashMap<>();
+                    Map<Integer,String> pronos = new HashMap<>();
+                    pronos.put(n, ganador);
+                    result.put("pronosticos", pronos);
+                    result.put("marcados", new ArrayList<Integer>());
+                    RESULT = result;
+               :}
+              | NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador MARCA
+               {:
+                    Map<String,Object> result = new HashMap<>();
+                    Map<Integer,String> pronos = new HashMap<>();
+                    pronos.put(n, ganador);
+                    List<Integer> marc = new ArrayList<>();
+                    marc.add(n);
+                    result.put("pronosticos", pronos);
+                    result.put("marcados", marc);
+                    RESULT = result;
+               :};

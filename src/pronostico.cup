@@ -69,24 +69,24 @@ terminal CAMPEONATO, FIXTURE, SERIE, PRE_GRUPO, PRE_EQUIPOS,
          CORCHETE_IZQ, CORCHETE_DER, COMA, NRO_PARTIDO, GUION,
          SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA;
 
-terminal String TORNEO, LETRA_GRUPO, EQUIPO, ESTADIO, HORA, FECHA, NOMBRE, APELLIDO, EMAIL, QSTRING;
+terminal String TORNEO, LETRA_GRUPO, EQUIPO, EQUIPO1, EQUIPO2, ESTADIO, HORA, FECHA, NOMBRE, APELLIDO, EMAIL, QSTRING;
 terminal Integer NUMERO, RESULTADO;
 
 
-non terminal Object inicio, campeonato, fixture, partido, serie, participante, pronosticos, pronostico;
+non terminal Object inicio, campeonato, fixture, fixture_partidos, partido, serie, participante, participantes, pronosticos, pronostico;
 
 
 start with inicio;
 
 
-inicio ::= campeonato fixture particpantes
+inicio ::= campeonato fixture participantes
     {:System.out.println("SE COMPLETO EL ANALISIS FIRMEEEE");
 
 
 
     :};
 
-campeonato ::= CAMPEONATO TORENO:t
+campeonato ::= CAMPEONATO TORNEO:t
 
     {:
         System.out.println("SE ESTA JUGANDO UN: " + t);

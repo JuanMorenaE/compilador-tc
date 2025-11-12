@@ -29,7 +29,7 @@ Espacio = \t | \f | [ ]
 
 EspacioGeneral = ({FinDeRenglon})+ | ({Espacio})+
 
-Torneo = "Mundial" | "Copa America"
+Torneo = \"Mundial[ ][0-9]{4}\"
 
 Grupo = [A-Z]
 
@@ -39,7 +39,7 @@ Estadio = "Estadio Monumental" | "Azteca Stadium" | "Antelcito Arena" |  "Estadi
 
 Hora = [0-1][0-9]:[0-5][0-9] | 2[0-3]:[0-5][0-9]
 
-Numero = [1-9][0-9]*
+Numero = [0-9][0-9]*
 
 Resultado = {Numero} | [0]
 
@@ -47,44 +47,126 @@ Fecha = [0-9][0-9][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]
 
 Nombre = [A-Z][a-z]*
 
-Apellido = [A-Z][a-z]*
-
 Email = [A-Za-z0-9._%+-]+@[A-Za-z]+\.[A-Za-z]+
 
 %%
 
-"Campeonato"            {return symbol(sym.CAMPEONATO);}
-"Fixture"               {return symbol(sym.FIXTURE);}
-"SERIE"                 {return symbol(sym.SERIE);}
-"Grupo" [ ]+            {return symbol(sym.PRE_GRUPO);}
-"Equipos" [ ]* ":"      {return symbol(sym.PRE_EQUIPOS);}
-"\["                    {return symbol(sym.CORCHETE_IZQ);}
-"\]"                    {return symbol(sym.CORCHETE_DER);}
-\,                      {return symbol(sym.COMA);}
-"Partido Nro" [ ]* ":"  {return symbol(sym.NRO_PARTIDO);}
-\-                      {return symbol(sym.GUION);}
-"*-*-*-*-*-*-*-*-*-*-"  {return symbol(sym.SEPARADOR);}
-"Participante:"         {return symbol(sym.PRE_PARTICIPANTE);}
-"Pronósticos Partidos:" {return symbol(sym.PRONOSTICOS);}
-\:                      {return symbol(sym.DOSPUNTOS);}
-"(X)"                   {return symbol(sym.MARCA);}
+"Campeonato" { 
+    System.out.println("TOKEN CAMPEONATO: " + yytext()); 
+    return symbol(sym.CAMPEONATO); 
+}
+"Fixture" { 
+    System.out.println("TOKEN FIXTURE: " + yytext()); 
+    return symbol(sym.FIXTURE); 
+}
+"SERIE" { 
+    System.out.println("TOKEN SERIE: " + yytext()); 
+    return symbol(sym.SERIE); 
+}
+"Grupo" [ ]+ { 
+    System.out.println("TOKEN PRE_GRUPO: " + yytext()); 
+    return symbol(sym.PRE_GRUPO); 
+}
+"Equipos" [ ]* ":" { 
+    System.out.println("TOKEN PRE_EQUIPOS: " + yytext()); 
+    return symbol(sym.PRE_EQUIPOS); 
+}
+"\[" { 
+    System.out.println("TOKEN CORCHETE_IZQ: " + yytext()); 
+    return symbol(sym.CORCHETE_IZQ); 
+}
+"\]" { 
+    System.out.println("TOKEN CORCHETE_DER: " + yytext()); 
+    return symbol(sym.CORCHETE_DER); 
+}
+\, { 
+    System.out.println("TOKEN COMA: " + yytext()); 
+    return symbol(sym.COMA); 
+}
+"Partido Nro" [ ]* ":" { 
+    System.out.println("TOKEN NRO_PARTIDO: " + yytext()); 
+    return symbol(sym.NRO_PARTIDO); 
+}
+\- { 
+    System.out.println("TOKEN GUION: " + yytext()); 
+    return symbol(sym.GUION); 
+}
+"*-*-*-*-*-*-*-*-*-*-" { 
+    System.out.println("TOKEN SEPARADOR: " + yytext()); 
+    return symbol(sym.SEPARADOR); 
+}
+"Participante:" { 
+    System.out.println("TOKEN PRE_PARTICIPANTE: " + yytext()); 
+    return symbol(sym.PRE_PARTICIPANTE); 
+}
+"Pronósticos Partidos:" { 
+    System.out.println("TOKEN PRONOSTICOS: " + yytext()); 
+    return symbol(sym.PRONOSTICOS); 
+}
+\: { 
+    System.out.println("TOKEN DOSPUNTOS: " + yytext()); 
+    return symbol(sym.DOSPUNTOS); 
+}
+"(X)" { 
+    System.out.println("TOKEN MARCA: " + yytext()); 
+    return symbol(sym.MARCA); 
+}
 
-{FinDeRenglon}          {}
-{Espacio}               {}
-{EspacioGeneral}        {}
-[\r\n\t ]+              {}
+/* ----- Ignorar espacios y saltos ----- */
+{FinDeRenglon} {}
+{Espacio} {}
+{EspacioGeneral} {}
+[\r\n\t ]+ {}
 
-\"([^\"\r\n]*)\"        {return symbol(sym.QSTRING, yytext()); }
-{Torneo}                {return symbol(sym.TORNEO, yytext());}
-{Grupo}                 {return symbol(sym.LETRA_GRUPO, yytext());}
-{Equipo}                {return symbol(sym.EQUIPO, yytext());}
-{Estadio}               {return symbol(sym.ESTADIO, yytext());}
-{Hora}                  {return symbol(sym.HORA, yytext());}
-{Numero}                {return symbol(sym.NUMERO, yytext());}
-{Resultado}             {return symbol(sym.RESULTADO, yytext());}
-{Fecha}                 {return symbol(sym.FECHA, yytext());}
-{Nombre}                {return symbol(sym.NOMBRE, yytext());}
-{Apellido}              {return symbol(sym.APELLIDO, yytext());}
-{Email}                 {return symbol(sym.EMAIL, yytext());}
+/* ----- Tokens con valor ----- */
+{Torneo} {
+    System.out.println("TOKEN TORNEO: " + yytext());
+    return symbol(sym.TORNEO, yytext());
+}
+\"([^\"\r\n]*)\" {
+    System.out.println("TOKEN QSTRING: " + yytext());
+    return symbol(sym.QSTRING, yytext());
+}
+{Grupo} {
+    System.out.println("TOKEN LETRA_GRUPO: " + yytext());
+    return symbol(sym.LETRA_GRUPO, yytext());
+}
+{Equipo} {
+    System.out.println("TOKEN EQUIPO: " + yytext());
+    return symbol(sym.EQUIPO, yytext());
+}
+{Estadio} {
+    System.out.println("TOKEN ESTADIO: " + yytext());
+    return symbol(sym.ESTADIO, yytext());
+}
+{Hora} {
+    System.out.println("TOKEN HORA: " + yytext());
+    return symbol(sym.HORA, yytext());
+}
+{Numero} {
+    Integer numero = Integer.parseInt(yytext());
+    System.out.println("TOKEN NUMERO: " + numero);
+    return symbol(sym.NUMERO, numero);
+}
+{Resultado} {
+    System.out.println("TOKEN RESULTADO: " + yytext());
+    return symbol(sym.RESULTADO, yytext());
+}
+{Fecha} {
+    System.out.println("TOKEN FECHA: " + yytext());
+    return symbol(sym.FECHA, yytext());
+}
+{Nombre} {
+    System.out.println("TOKEN NOMBRE: " + yytext());
+    return symbol(sym.NOMBRE, yytext());
+}
+{Email} {
+    System.out.println("TOKEN EMAIL: " + yytext());
+    return symbol(sym.EMAIL, yytext());
+}
 
-.                       {System.err.println("Caracter ilegal '" + yytext() + "' en la línea " + (yyline+1) + ", col " + (yycolumn+1));}
+/* ----- Cualquier otro caracter ilegal ----- */
+. {
+    System.err.println("CARACTER ILEGAL: '" + yytext() + 
+        "' en línea " + (yyline + 1) + ", columna " + (yycolumn + 1));
+}

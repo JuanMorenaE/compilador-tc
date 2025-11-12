@@ -11,11 +11,7 @@ parser code {:
         int golesLocal;
         String equipoVisitante;
         int golesVisitante;
-        String grupo;
-        List<String> equipos = new ArrayList<>();
     }
-
-
 
 
     class Participante {
@@ -32,14 +28,7 @@ parser code {:
     List<Participante> participantes = new ArrayList<>();
 
 
-
-
-
-
-
-
-     //reportes de errores
-
+    // Reportes de errores
 
     public void report_error(String message, Object info) {
         StringBuffer m = new StringBuffer("Error");
@@ -54,14 +43,6 @@ parser code {:
         m.append(" : "+message);
         System.err.println(m);
     }
-
-    public void report_fatal_error(String message, Object info) {
-        report_error(message, info);
-        System.exit(1);
-    }
-
-
-
 :};
 
 
@@ -69,46 +50,78 @@ terminal CAMPEONATO, FIXTURE, SERIE, PRE_GRUPO, PRE_EQUIPOS,
          CORCHETE_IZQ, CORCHETE_DER, COMA, NRO_PARTIDO, GUION,
          SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA;
 
-terminal String TORNEO, LETRA_GRUPO, EQUIPO, EQUIPO1, EQUIPO2, ESTADIO, HORA, FECHA, NOMBRE, APELLIDO, EMAIL, QSTRING;
+terminal String TORNEO, LETRA_GRUPO, EQUIPO, ESTADIO, HORA, FECHA, NOMBRE, EMAIL, QSTRING;
 terminal Integer NUMERO, RESULTADO;
 
 
-non terminal Object inicio, campeonato, fixture, fixture_partidos, partido, serie, participante, participantes, pronosticos, pronostico;
+non terminal Object inicio, campeonato, fixture, fixture_partidos, partido, serie, participante, participantes, partidos;
+non terminal Map<String, Object> pronosticos, pronostico;
+non terminal List<String> equipos;
 
 
 start with inicio;
 
 
 inicio ::= campeonato fixture participantes
-    {:System.out.println("SE COMPLETO EL ANALISIS FIRMEEEE");
+        {:
+            System.out.println("SE COMPLETO EL ANALISIS FIRMEEEE");
+        :};
 
-
-
-    :};
 
 campeonato ::= CAMPEONATO TORNEO:t
+        {:
+            System.out.println("SE ESTA JUGANDO UN: " + t);
+        :};
 
-    {:
-        System.out.println("SE ESTA JUGANDO UN: " + t);
+
+fixture::= 
+            FIXTURE 
+            fixture_partidos
+        {:
+            System.out.println("SE COMPLETO EL FIXTURE");
+        :};
 
 
-    :};
-
-fixture::= FIXTURE fixture_partidos
-    {:
-        System.out.println("SE COMPLETO EL FIXTURE");
-
-    :};
-
-fixture_partidos::= fixture_partidos partido|partido;
-
-partido ::= NRO_PARTIDO DOSPUNTOS NUMERO:n
-            FECHA:f GUION QSTRING:e
-            EQUIPO:loc RESULTADO:g1 GUION EQUIPO:vis RESULTADO:g2
+fixture_partidos::= 
             SERIE QSTRING:g
-            PRE_EQUIPOS CORCHETE_IZQ EQUIPO1:e1 COMA EQUIPO2:e2 COMA EQUIPO:e3 COMA EQUIPO:e4 CORCHETE_DER
-
+            PRE_EQUIPOS CORCHETE_IZQ equipos:eq CORCHETE_DER
+            partidos
+            fixture_partidos:resto
             {:
+                series.put(g, eq);
+            :}
+            |
+            SERIE QSTRING:g
+            PRE_EQUIPOS CORCHETE_IZQ equipos:eq CORCHETE_DER
+            partidos 
+            {:
+                series.put(g, eq);
+            :};
+
+equipos ::= EQUIPO:n COMA equipos:resto
+            {:
+                List<String> lista = new ArrayList<>();
+                lista.add(n);
+                lista.addAll(resto);
+
+                RESULT = lista;
+            :} | EQUIPO:n {:
+                List<String> lista = new ArrayList<>();
+                lista.add(n);
+
+                RESULT = lista;
+            :};
+
+partidos ::= partido 
+             partidos 
+             |
+             partido;
+
+
+partido ::= NRO_PARTIDO NUMERO:n
+            FECHA:f GUION QSTRING:e
+            EQUIPO:loc NUMERO:g1 GUION EQUIPO:vis NUMERO:g2
+        {:
             Partido p = new Partido();
             p.nro = n;
             p.fecha = f;
@@ -116,67 +129,62 @@ partido ::= NRO_PARTIDO DOSPUNTOS NUMERO:n
             p.equipoLocal = loc;
             p.golesLocal = g1;
             p.equipoVisitante = vis;
-            p.golesVisitante = g2;p.grupo = g;
-            p.equipos.addAll(Arrays.asList(e1,e2,e3,e4));
+            p.golesVisitante = g2;
             partidos.add(p);
-            series.put(g, p.equipos);
 
             System.out.println("SE AGREGO UN NUEVO PARTIDOOO");
-
-            :};
+        :};
 
 
 participantes ::= participantes participante|participante;
 
 
+participante::= PRE_PARTICIPANTE NOMBRE:n NOMBRE:a EMAIL:mail
+                PRONOSTICOS pronosticos:pron
+        {:
+            Participante p = new Participante();
+            p.nombre = n;
+            p.apellido = a;
+            p.mail = mail;
+            p.pronosticos.putAll((Map<Integer,String>)pron.get("pronosticos"));
+            p.marcados.addAll((List<Integer>)pron.get("marcados"));
 
-//a partir de aca ya no tengo mucha idea que esta pasando
+            if (p.marcados.size() > 4)
+                report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
 
-participante::= PRE_PARTICIPANTE NOMBRE:n APELLIDO:a EMAIL:mail
-                PRONOSTICOS pronosticos
-                {:
-                Participante p = new Participante();
-                p.nombre = n;
-                p.apellido = a;
-                p.email = mail;
-                p.pronosticos.putAll((Map<Integer,String>)RESULT.get("pronosticos"));
-                p.marcados.addAll((List<Integer>)RESULT.get("marcados"));
-
-                if (p.marcados.size() > 4)
-                    report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
-
-                participantes.add(p);
-                System.out.println("👤 Participante agregado: " + n + " " + a + " (" + p.marcados.size() + " marcados)");
-                :};
+            participantes.add(p);
+            System.out.println("👤 Participante agregado: " + n + " " + a + " (" + p.marcados.size() + " marcados)");
+        :};
 
 
-pronosticos ::= pronosticos pronostico
-                {:
-                    Map<Integer,String> ps = (Map<Integer,String>)$1;
-                    List<Integer> marcados = (List<Integer>)$2.get("marcados");
-                    ps.putAll((Map<Integer,String>)$2.get("pronosticos"));
-                    ((Map<String,Object>)RESULT).put("pronosticos", ps);
-                    ((Map<String,Object>)RESULT).put("marcados", marcados);
-                :}
-              | pronostico;
+pronosticos ::= pronosticos pronostico:pron
+        {:
+            Map<Integer,String> ps = new HashMap<Integer,String>();
+            List<Integer> marcados = (List<Integer>) RESULT.get("marcados");
+            ps.putAll((Map<Integer,String>) RESULT.get("pronosticos"));
+            ((Map<String,Object>)RESULT).put("pronosticos", ps);
+            ((Map<String,Object>)RESULT).put("marcados", marcados);
+        :}
+        | pronostico;
+
 
 pronostico ::= NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador
-               {:
-                    Map<String,Object> result = new HashMap<>();
-                    Map<Integer,String> pronos = new HashMap<>();
-                    pronos.put(n, ganador);
-                    result.put("pronosticos", pronos);
-                    result.put("marcados", new ArrayList<Integer>());
-                    RESULT = result;
-               :}
-              | NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador MARCA
-               {:
-                    Map<String,Object> result = new HashMap<>();
-                    Map<Integer,String> pronos = new HashMap<>();
-                    pronos.put(n, ganador);
-                    List<Integer> marc = new ArrayList<>();
-                    marc.add(n);
-                    result.put("pronosticos", pronos);
-                    result.put("marcados", marc);
-                    RESULT = result;
-               :};
+        {:
+            Map<String,Object> result = new HashMap<>();
+            Map<Integer,String> pronos = new HashMap<>();
+            pronos.put(n, ganador);
+            result.put("pronosticos", pronos);
+            result.put("marcados", new ArrayList<Integer>());
+            RESULT = result;
+        :}
+        | NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador MARCA
+        {:
+            Map<String,Object> result = new HashMap<>();
+            Map<Integer,String> pronos = new HashMap<>();
+            pronos.put(n, ganador);
+            List<Integer> marc = new ArrayList<>();
+            marc.add(n);
+            result.put("pronosticos", pronos);
+            result.put("marcados", marc);
+            RESULT = result;
+        :};

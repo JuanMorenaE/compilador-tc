@@ -139,8 +139,9 @@ partido ::= NRO_PARTIDO NUMERO:n
 participantes ::= participantes participante|participante;
 
 
-participante::= PRE_PARTICIPANTE NOMBRE:n NOMBRE:a EMAIL:mail
-                PRONOSTICOS pronosticos:pron
+participante::= SEPARADOR PRE_PARTICIPANTE NOMBRE:n NOMBRE:a GUION EMAIL:mail
+                PRONOSTICOS 
+                pronosticos:pron
         {:
             Participante p = new Participante();
             p.nombre = n;
@@ -157,34 +158,65 @@ participante::= PRE_PARTICIPANTE NOMBRE:n NOMBRE:a EMAIL:mail
         :};
 
 
-pronosticos ::= pronosticos pronostico:pron
+pronosticos ::= pronostico:pron pronosticos:otros
         {:
-            Map<Integer,String> ps = new HashMap<Integer,String>();
-            List<Integer> marcados = (List<Integer>) RESULT.get("marcados");
-            ps.putAll((Map<Integer,String>) RESULT.get("pronosticos"));
-            ((Map<String,Object>)RESULT).put("pronosticos", ps);
+            Map<Integer, String> ps = new HashMap<Integer,String>();
+            List<Integer> marcados = new ArrayList<>();
+
+            Integer marcado = RESULT.get("marcados");
+            if (marcado)
+                marcados.add(RESULT.get("marcados"));
+
+            String ganador = RESULT.get("ganador");
+            Integer partido = RESULT.get("partido");
+
+            ps.put(partido, ganador);
+            ((Map<String,Object>)RESULT).put("ganadores", ps);
             ((Map<String,Object>)RESULT).put("marcados", marcados);
         :}
-        | pronostico;
+        | pronostico:pron 
+        {:
+            Map<Integer, String> ps = new HashMap<Integer,String>();
+            List<Integer> marcados = new ArrayList<>();
+
+            Integer marcado = RESULT.get("marcados");
+            if (marcado)
+                marcados.add(RESULT.get("marcados"));
+
+            String ganador = RESULT.get("ganador");
+            Integer partido = RESULT.get("partido");
+
+            ps.put(partido, ganador);
+            ((Map<String,Object>)RESULT).put("ganadores", ps);
+            ((Map<String,Object>)RESULT).put("marcados", marcados);
+        :};
 
 
-pronostico ::= NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador
+pronostico ::= NUMERO:p DOSPUNTOS EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
             Map<String,Object> result = new HashMap<>();
-            Map<Integer,String> pronos = new HashMap<>();
-            pronos.put(n, ganador);
-            result.put("pronosticos", pronos);
-            result.put("marcados", new ArrayList<Integer>());
+            String ganador;
+
+            if (g1 > g2) ganador = e1;
+            else if (g2 > g1) ganador = e2;
+            
+            result.put("partido", p);
+            result.put("ganador", ganador);
+            result.put("marcado", null);
+
             RESULT = result;
         :}
-        | NRO_PARTIDO DOSPUNTOS NUMERO:n EQUIPO:ganador MARCA
+        | NUMERO:p DOSPUNTOS MARCA EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
             Map<String,Object> result = new HashMap<>();
-            Map<Integer,String> pronos = new HashMap<>();
-            pronos.put(n, ganador);
-            List<Integer> marc = new ArrayList<>();
-            marc.add(n);
-            result.put("pronosticos", pronos);
-            result.put("marcados", marc);
+            String ganador;
+
+            if (g1 > g2) ganador = e1;
+            else if (g2 > g1) ganador = e2;
+            
+            result.put("partido", p);
+            result.put("ganador", ganador);
+            result.put("marcado", p);
+
             RESULT = result;
         :};

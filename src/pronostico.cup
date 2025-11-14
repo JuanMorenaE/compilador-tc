@@ -64,13 +64,13 @@ start with inicio;
 
 inicio ::= campeonato fixture participantes
         {:
-            System.out.println("SE COMPLETO EL ANALISIS FIRMEEEE");
+            System.out.println("✅ Analisis completado correctamente.");
         :};
 
 
 campeonato ::= CAMPEONATO TORNEO:t
         {:
-            System.out.println("SE ESTA JUGANDO UN: " + t);
+            System.out.println("🏆 Se esta jugando: " + t);
         :};
 
 
@@ -78,7 +78,7 @@ fixture::=
             FIXTURE 
             fixture_partidos
         {:
-            System.out.println("SE COMPLETO EL FIXTURE");
+            System.out.println("✅ Se completo el fixture.");
         :};
 
 
@@ -89,6 +89,7 @@ fixture_partidos::=
             fixture_partidos:resto
             {:
                 series.put(g, eq);
+                System.out.println("📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
             :}
             |
             SERIE QSTRING:g
@@ -105,7 +106,9 @@ equipos ::= EQUIPO:n COMA equipos:resto
                 lista.addAll(resto);
 
                 RESULT = lista;
-            :} | EQUIPO:n {:
+            :} 
+            | EQUIPO:n 
+            {:
                 List<String> lista = new ArrayList<>();
                 lista.add(n);
 
@@ -132,7 +135,12 @@ partido ::= NRO_PARTIDO NUMERO:n
             p.golesVisitante = g2;
             partidos.add(p);
 
-            System.out.println("SE AGREGO UN NUEVO PARTIDOOO");
+            System.out.println(
+                "⚽ Partido agregado: N°" + n +
+                " | " + loc + " " + g1 + " - " + g2 + " " + vis +
+                " | Fecha: " + f +
+                " | Estadio: " + e
+            );
         :};
 
 
@@ -147,76 +155,88 @@ participante::= SEPARADOR PRE_PARTICIPANTE NOMBRE:n NOMBRE:a GUION EMAIL:mail
             p.nombre = n;
             p.apellido = a;
             p.mail = mail;
-            p.pronosticos.putAll((Map<Integer,String>)pron.get("pronosticos"));
-            p.marcados.addAll((List<Integer>)pron.get("marcados"));
+            p.pronosticos.putAll((Map<Integer,String>) pron.get("ganadores"));
+            p.marcados.addAll((List<Integer>) pron.get("marcados"));
 
             if (p.marcados.size() > 4)
                 report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
 
             participantes.add(p);
-            System.out.println("👤 Participante agregado: " + n + " " + a + " (" + p.marcados.size() + " marcados)");
+            
+            System.out.println(
+                    "👤 Participante agregado: " + n + " " + a + 
+                    " Pronósticos: " + p.pronosticos.size() + 
+                    " | Marcados(X): " + p.marcados.size() + 
+                    " | Email: " + mail
+            );
         :};
 
 
-pronosticos ::= pronostico:pron pronosticos:otros
+pronosticos ::= pronostico:pron pronosticos:resto
         {:
-            Map<Integer, String> ps = new HashMap<Integer,String>();
-            List<Integer> marcados = new ArrayList<>();
+            Map<String, Object> result = new HashMap<>();
 
-            Integer marcado = RESULT.get("marcados");
-            if (marcado)
-                marcados.add(RESULT.get("marcados"));
+            Map<Integer, String> ganadores = (Map<Integer, String>) resto.get("ganadores");
+            List<Integer> marcados = (List<Integer>) resto.get("marcados");
 
-            String ganador = RESULT.get("ganador");
-            Integer partido = RESULT.get("partido");
+            Integer partido = (Integer) pron.get("partido");
+            String ganador = (String) pron.get("ganador");
+            boolean marcado = (boolean) pron.get("marcado");
 
-            ps.put(partido, ganador);
-            ((Map<String,Object>)RESULT).put("ganadores", ps);
-            ((Map<String,Object>)RESULT).put("marcados", marcados);
+            ganadores.put(partido, ganador);
+            if (marcado) marcados.add(partido);
+
+            result.put("ganadores", ganadores);
+            result.put("marcados", marcados);
+
+            RESULT = result;
         :}
         | pronostico:pron 
         {:
-            Map<Integer, String> ps = new HashMap<Integer,String>();
+            Map<String,Object> result = new HashMap<>();
+
+            Map<Integer, String> ganadores = new HashMap<Integer,String>();
             List<Integer> marcados = new ArrayList<>();
 
-            Integer marcado = RESULT.get("marcados");
-            if (marcado)
-                marcados.add(RESULT.get("marcados"));
+            Integer partido = (Integer) pron.get("partido");
+            String ganador = (String) pron.get("ganador");
+            boolean marcado = (boolean) pron.get("marcado");
 
-            String ganador = RESULT.get("ganador");
-            Integer partido = RESULT.get("partido");
+            ganadores.put(partido, ganador);
+            if (marcado) marcados.add(partido);
 
-            ps.put(partido, ganador);
-            ((Map<String,Object>)RESULT).put("ganadores", ps);
-            ((Map<String,Object>)RESULT).put("marcados", marcados);
+            result.put("ganadores", ganadores);
+            result.put("marcados", marcados);
+
+            RESULT = result;
         :};
 
 
 pronostico ::= NUMERO:p DOSPUNTOS EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
-            Map<String,Object> result = new HashMap<>();
-            String ganador;
+            Map<String, Object> result = new HashMap<>();
+            String ganador = "";
 
             if (g1 > g2) ganador = e1;
             else if (g2 > g1) ganador = e2;
             
             result.put("partido", p);
             result.put("ganador", ganador);
-            result.put("marcado", null);
+            result.put("marcado", false);
 
             RESULT = result;
         :}
         | NUMERO:p DOSPUNTOS MARCA EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
-            Map<String,Object> result = new HashMap<>();
-            String ganador;
+            Map<String, Object> result = new HashMap<>();
+            String ganador = "";
 
             if (g1 > g2) ganador = e1;
             else if (g2 > g1) ganador = e2;
             
             result.put("partido", p);
             result.put("ganador", ganador);
-            result.put("marcado", p);
+            result.put("marcado", true);
 
             RESULT = result;
         :};

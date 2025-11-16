@@ -20,10 +20,10 @@ parser code {:
         String mail;
         Map<Integer, String> pronosticos = new HashMap<>();
         List<Integer> marcados = new ArrayList<>();
+        int puntaje;
     }
 
-
-    List<Partido> partidos = new ArrayList<>();
+    Map<Integer, Partido> partidos = new HashMap<>();
     Map<String, List<String>> series = new HashMap<>();
     List<Participante> participantes = new ArrayList<>();
 
@@ -31,7 +31,7 @@ parser code {:
     // Reportes de errores
 
     public void report_error(String message, Object info) {
-        StringBuffer m = new StringBuffer("Error");
+        StringBuffer m = new StringBuffer("⚠️ ERROR SINTACTICO");
         if (info instanceof java_cup.runtime.Symbol) {
             java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
             if (s.left >= 0) {
@@ -46,25 +46,48 @@ parser code {:
 :};
 
 
-terminal CAMPEONATO, FIXTURE, SERIE, PRE_GRUPO, PRE_EQUIPOS,
+terminal CAMPEONATO, FIXTURE, SERIE, PRE_EQUIPOS,
          CORCHETE_IZQ, CORCHETE_DER, COMA, NRO_PARTIDO, GUION,
-         SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA;
+         SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA, JUEGO;
 
-terminal String TORNEO, LETRA_GRUPO, EQUIPO, ESTADIO, HORA, FECHA, NOMBRE, EMAIL, QSTRING;
-terminal Integer NUMERO, RESULTADO;
+terminal String TORNEO, EQUIPO, HORA, FECHA, NOMBRE, EMAIL, QSTRING;
+terminal Integer NUMERO;
 
 
-non terminal Object inicio, campeonato, fixture, fixture_partidos, partido, serie, participante, participantes, partidos;
+non terminal Object inicio, campeonato, fixture, fixture_partidos, serie, participante, participantes;
 non terminal Map<String, Object> pronosticos, pronostico;
 non terminal List<String> equipos;
+non terminal List<Partido> partidos;
+non terminal Partido partido;
 
 
 start with inicio;
 
 
-inicio ::= campeonato fixture participantes
+inicio ::= campeonato fixture participantes SEPARADOR
         {:
-            System.out.println("✅ Analisis completado correctamente.");
+            System.out.println("\n✅ Analisis completado correctamente.");
+
+            System.out.println("\n\n🏅 Ranking por puntos:");
+            Collections.sort(participantes, (p1, p2) -> Integer.compare(p2.puntaje, p1.puntaje));
+
+            for (Participante part: participantes) {
+                System.out.println(
+                    "👤 Participante: " + part.nombre + " " + part.apellido +
+                    " | Puntaje: " + part.puntaje
+                );
+            }
+
+
+            System.out.println("\n\n📊 Estadisticas del campeonato:");
+
+            int promedioGoles = 0;
+            for (Partido part : partidos.values()) {
+                promedioGoles += part.golesLocal + part.golesVisitante;
+            }
+            promedioGoles /= partidos.size();
+
+            System.out.println("Promedio de goles por partido: " + promedioGoles);
         :};
 
 
@@ -78,25 +101,71 @@ fixture::=
             FIXTURE 
             fixture_partidos
         {:
-            System.out.println("✅ Se completo el fixture.");
+            System.out.println("\n✅ Se completo el fixture.\n");
+
+            if (series.size() != 4 && series.size() != 8 && series.size() != 12) {
+                report_error("El campeonato debe tener 4, 8 o 12 series. Se encontraron: " + series.size(), null);
+                throw new RuntimeException("Parse abortado por cantidad inválida de series.");
+            }
         :};
 
 
 fixture_partidos::= 
             SERIE QSTRING:g
             PRE_EQUIPOS CORCHETE_IZQ equipos:eq CORCHETE_DER
-            partidos
+            partidos:part
             fixture_partidos:resto
             {:
                 series.put(g, eq);
-                System.out.println("📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
+
+                if (eq.size() > 4){
+                    report_error("La serie " + g + " no tiene 4 equipos exactamente.", null);
+                    throw new RuntimeException("Parse abortado por cantidad inválida de equipos dentro de una serie.");
+                }
+
+                System.out.println("\n📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
+
+                for(Partido p: part) {
+                    if (!eq.contains(p.equipoLocal) || !eq.contains(p.equipoVisitante)){
+                        report_error("El partido " + p.nro + " tiene equipos de otra serie.", null);
+                        throw new RuntimeException("Parse abortado por equipos inválidos dentro de un partido.");
+                    }
+
+                    System.out.println(
+                        "⚽ Partido agregado: N°" + p.nro +
+                        " | " + p.equipoLocal + " " + p.golesLocal + " - " + p.golesVisitante + " " + p.equipoVisitante +
+                        " | Fecha: " + p.fecha +
+                        " | Estadio: " + p.estadio
+                    );
+                }
             :}
             |
             SERIE QSTRING:g
             PRE_EQUIPOS CORCHETE_IZQ equipos:eq CORCHETE_DER
-            partidos 
+            partidos:part
             {:
                 series.put(g, eq);
+
+                if (eq.size() > 4){
+                    report_error("La serie " + g + " no tiene 4 equipos exactamente.", null);
+                    throw new RuntimeException("Parse abortado por cantidad inválida de equipos dentro de una serie.");
+                }
+                    
+                System.out.println("\n📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
+
+                for(Partido p: part) {
+                    if (!eq.contains(p.equipoLocal) || !eq.contains(p.equipoVisitante)){
+                        report_error("El partido " + p.nro + " tiene equipos de otra serie.", null);
+                        throw new RuntimeException("Parse abortado por equipos inválidos dentro de un partido.");
+                    }
+
+                    System.out.println(
+                        "⚽ Partido agregado: N°" + p.nro +
+                        " | " + p.equipoLocal + " " + p.golesLocal + " - " + p.golesVisitante + " " + p.equipoVisitante +
+                        " | Fecha: " + p.fecha +
+                        " | Estadio: " + p.estadio
+                    );
+                }
             :};
 
 equipos ::= EQUIPO:n COMA equipos:resto
@@ -115,32 +184,39 @@ equipos ::= EQUIPO:n COMA equipos:resto
                 RESULT = lista;
             :};
 
-partidos ::= partido 
-             partidos 
-             |
-             partido;
+partidos ::= partido:part
+             partidos:resto 
+             {:
+                List<Partido> result = (List<Partido>) resto;
+                result.add(part);
+
+                RESULT = result;
+             :}
+             | partido:part
+             {:
+                List<Partido> result = new ArrayList<>();
+                result.add(part);
+
+                RESULT = result;
+             :};
 
 
 partido ::= NRO_PARTIDO NUMERO:n
             FECHA:f GUION QSTRING:e
             EQUIPO:loc NUMERO:g1 GUION EQUIPO:vis NUMERO:g2
         {:
-            Partido p = new Partido();
-            p.nro = n;
-            p.fecha = f;
-            p.estadio = e;
-            p.equipoLocal = loc;
-            p.golesLocal = g1;
-            p.equipoVisitante = vis;
-            p.golesVisitante = g2;
-            partidos.add(p);
+            Partido result = new Partido();
+            result.nro = n;
+            result.fecha = f;
+            result.estadio = e;
+            result.equipoLocal = loc;
+            result.golesLocal = g1;
+            result.equipoVisitante = vis;
+            result.golesVisitante = g2;
 
-            System.out.println(
-                "⚽ Partido agregado: N°" + n +
-                " | " + loc + " " + g1 + " - " + g2 + " " + vis +
-                " | Fecha: " + f +
-                " | Estadio: " + e
-            );
+            partidos.put(n, result);
+
+            RESULT = result;
         :};
 
 
@@ -157,9 +233,12 @@ participante::= SEPARADOR PRE_PARTICIPANTE NOMBRE:n NOMBRE:a GUION EMAIL:mail
             p.mail = mail;
             p.pronosticos.putAll((Map<Integer,String>) pron.get("ganadores"));
             p.marcados.addAll((List<Integer>) pron.get("marcados"));
+            p.puntaje += (int) pron.get("puntaje");
 
-            if (p.marcados.size() > 4)
+            if (p.marcados.size() > 4) {
                 report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
+                throw new RuntimeException("Parse abortado por cantidad inválida de pronosticos marcados con (X).");
+            }
 
             participantes.add(p);
             
@@ -167,7 +246,35 @@ participante::= SEPARADOR PRE_PARTICIPANTE NOMBRE:n NOMBRE:a GUION EMAIL:mail
                     "👤 Participante agregado: " + n + " " + a + 
                     " Pronósticos: " + p.pronosticos.size() + 
                     " | Marcados(X): " + p.marcados.size() + 
-                    " | Email: " + mail
+                    " | Email: " + mail +
+                    " | Puntaje: " + p.puntaje
+            );
+        :}
+        |   SEPARADOR
+            JUEGO NOMBRE:n NOMBRE:a GUION EMAIL:mail
+            pronosticos:pron
+        {:
+            Participante p = new Participante();
+            p.nombre = n;
+            p.apellido = a;
+            p.mail = mail;
+            p.pronosticos.putAll((Map<Integer,String>) pron.get("ganadores"));
+            p.marcados.addAll((List<Integer>) pron.get("marcados"));
+            p.puntaje += (int) pron.get("puntaje");
+
+            if (p.marcados.size() > 4) {
+                report_error("El participante " + n + " tiene más de 4 pronósticos marcados con (X)", null);
+                throw new RuntimeException("Parse abortado por cantidad inválida de pronosticos marcados con (X).");
+            }
+
+            participantes.add(p);
+            
+            System.out.println(
+                    "👤 Participante agregado: " + n + " " + a + 
+                    " Pronósticos: " + p.pronosticos.size() + 
+                    " | Marcados(X): " + p.marcados.size() + 
+                    " | Email: " + mail +
+                    " | Puntaje: " + p.puntaje
             );
         :};
 
@@ -178,16 +285,24 @@ pronosticos ::= pronostico:pron pronosticos:resto
 
             Map<Integer, String> ganadores = (Map<Integer, String>) resto.get("ganadores");
             List<Integer> marcados = (List<Integer>) resto.get("marcados");
+            int puntaje = (int) resto.get("puntaje");
 
             Integer partido = (Integer) pron.get("partido");
             String ganador = (String) pron.get("ganador");
             boolean marcado = (boolean) pron.get("marcado");
+            puntaje += (int) pron.get("puntaje");
+
+            if (ganadores.containsKey(partido)) {
+                report_error("Se detecto dos pronosticos para el mismo partido: " + partido + ".", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
 
             ganadores.put(partido, ganador);
             if (marcado) marcados.add(partido);
 
             result.put("ganadores", ganadores);
             result.put("marcados", marcados);
+            result.put("puntaje", puntaje);
 
             RESULT = result;
         :}
@@ -197,16 +312,24 @@ pronosticos ::= pronostico:pron pronosticos:resto
 
             Map<Integer, String> ganadores = new HashMap<Integer,String>();
             List<Integer> marcados = new ArrayList<>();
+            int puntaje = 0;
 
             Integer partido = (Integer) pron.get("partido");
             String ganador = (String) pron.get("ganador");
             boolean marcado = (boolean) pron.get("marcado");
+            puntaje += (int) pron.get("puntaje");
+
+            if (ganadores.containsKey(partido)) {
+                report_error("Se detecto dos pronosticos para el mismo partido: " + partido + ".", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
 
             ganadores.put(partido, ganador);
             if (marcado) marcados.add(partido);
 
             result.put("ganadores", ganadores);
             result.put("marcados", marcados);
+            result.put("puntaje", puntaje);
 
             RESULT = result;
         :};
@@ -215,28 +338,91 @@ pronosticos ::= pronostico:pron pronosticos:resto
 pronostico ::= NUMERO:p DOSPUNTOS EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
             Map<String, Object> result = new HashMap<>();
-            String ganador = "";
+            String prediccionGanador = "";
 
-            if (g1 > g2) ganador = e1;
-            else if (g2 > g1) ganador = e2;
+            Partido part = partidos.get(p);
+
+            if (part == null) {
+                report_error("Se detecto un pronosticos para el partido: " + p + ", pero el mismo no existe.", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
+
+            if (!part.equipoLocal.equals(e1) && !part.equipoVisitante.equals(e2)){
+                report_error("Se detecto un pronosticos para el partido: " + p + ", pero sus equipos son incorrectos.", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
+
+            if (g1 > g2) prediccionGanador = e1;
+            else if (g2 > g1) prediccionGanador = e2;
+
+            int puntaje = 0;
+
+            boolean isEmpate = part.golesLocal == part.golesVisitante;
+            String ganadorPartido = null;
+
+            if (!isEmpate)
+                ganadorPartido = part.golesLocal > part.golesVisitante ? part.equipoLocal : part.equipoVisitante;
+
+            if (prediccionGanador.equals(ganadorPartido))
+                puntaje += 2;
+
+            if (part.golesLocal == g1 || part.golesVisitante == g2)
+                puntaje += 1;
+
+            if (part.golesLocal == g1 && part.golesVisitante == g2)
+                puntaje += 1;
             
             result.put("partido", p);
-            result.put("ganador", ganador);
+            result.put("ganador", prediccionGanador);
             result.put("marcado", false);
+            result.put("puntaje", puntaje);
 
             RESULT = result;
         :}
         | NUMERO:p DOSPUNTOS MARCA EQUIPO:e1 NUMERO:g1 GUION EQUIPO:e2 NUMERO:g2
         {:
             Map<String, Object> result = new HashMap<>();
-            String ganador = "";
+            String prediccionGanador = "";
 
-            if (g1 > g2) ganador = e1;
-            else if (g2 > g1) ganador = e2;
+            Partido part = partidos.get(p);
+
+            if (part == null) {
+                report_error("Se detecto un pronosticos para el partido: " + p + ", pero el mismo no existe.", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
+
+            if (!part.equipoLocal.equals(e1) && !part.equipoVisitante.equals(e2)){
+                report_error("Se detecto un pronosticos para el partido: " + p + ", pero sus equipos son incorrectos.", null);
+                throw new RuntimeException("Parse abortado por pronosticos inválidos dentro de un participante.");
+            }
+
+            if (g1 > g2) prediccionGanador = e1;
+            else if (g2 > g1) prediccionGanador = e2;
+
+            int puntaje = 0;
+
+            boolean isEmpate = part.golesLocal == part.golesVisitante;
+            String ganadorPartido = null;
+
+            if (!isEmpate)
+                ganadorPartido = part.golesLocal > part.golesVisitante ? part.equipoLocal : part.equipoVisitante;
+
+            if (prediccionGanador.equals(ganadorPartido))
+                puntaje += 2;
+                
+            if (part.golesLocal == g1 || part.golesVisitante == g2)
+                puntaje += 1;
+
+            if (part.golesLocal == g1 && part.golesVisitante == g2)
+                puntaje += 1;
+
+            puntaje = puntaje * 2;
             
             result.put("partido", p);
-            result.put("ganador", ganador);
+            result.put("ganador", prediccionGanador);
             result.put("marcado", true);
+            result.put("puntaje", puntaje);
 
             RESULT = result;
         :};
+

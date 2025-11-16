@@ -1,0 +1,73 @@
+Campeonato "Mundial 2026"
+Fixture
+
+SERIE "Grupo A"
+Equipos: [Japón, Qatar, Alemania, Uruguay]
+
+Partido Nro: 1
+2026/06/15 - "Estadio Monumental"
+Japón 3 - Qatar 2
+
+Partido Nro: 8
+2026/06/16 - "Estadio Porahi"
+Alemania 3 - Uruguay 2
+
+
+SERIE "Grupo F"
+Equipos: [México, Argentina, Portugal, Senegal]
+
+Partido Nro: 30
+2026/07/05 - "Antelcito Arena"
+México 1 - Portugal 2
+
+Partido Nro: 32
+2026/06/26 - "Azteca Stadium"
+Argentina 3 - Senegal 0
+
+
+SERIE "Grupo C"
+Equipos: [Brasil, España, Canadá, Corea]
+
+Partido Nro: 15
+2026/06/20 - "Estadio Central"
+Brasil 2 - España 2
+
+Partido Nro: 17
+2026/06/21 - "Arena Norte"
+Canadá 1 - Corea 0
+
+
+SERIE "Grupo D"
+Equipos: [Inglaterra, Francia, Chile, Camerún]
+
+Partido Nro: 22
+2026/06/23 - "Estadio del Sur"
+Inglaterra 1 - Francia 1
+
+Partido Nro: 24
+2026/06/24 - "Estadio Rojo"
+Chile 0 - Camerún 2
+
+*-*-*-*-*-*-*-*-*-*-
+
+Participante: Pepe Repepe - pepe@mail.com
+Pronósticos Partidos:
+1: Japón 1 - Qatar 2
+30: México 1 - Portugal 2
+32: Argentina 3 - Senegal 0
+
+*-*-*-*-*-*-*-*-*-*-
+
+Participante: Yosepo Coinada - y.coinada@yahoo.com
+Pronósticos Partidos:
+1:(X) Japón 1 - Qatar 2
+30:(X) México 1 - Portugal 2
+32:(X) Argentina 0 - Senegal 1
+17: Canadá 1 - Corea 0
+
+*-*-*-*-*-*-*-*-*-*-
+
+Juego: Juanchi Quasigol - quasi@gol.com
+17: Canadá 1 - Corea 0
+
+*-*-*-*-*-*-*-*-*-*-

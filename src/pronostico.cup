@@ -26,7 +26,7 @@ parser code {:
     List<Partido> partidos = new ArrayList<>();
     Map<String, List<String>> series = new HashMap<>();
     List<Participante> participantes = new ArrayList<>();
-
+    int cantSeries = 0;
 
     // Reportes de errores
 
@@ -64,8 +64,18 @@ start with inicio;
 
 inicio ::= campeonato fixture participantes
         {:
+            // Validar cantidad total de series: 4, 8 o 12
+            if (cantSeries != 4 && cantSeries != 8 && cantSeries != 12) {
+                report_error(
+                    "Cantidad de series inválida: " + cantSeries +
+                    ". Debe ser 4, 8 o 12.",
+                    null
+                );
+            }
+
             System.out.println("✅ Analisis completado correctamente.");
         :};
+
 
 
 campeonato ::= CAMPEONATO TORNEO:t
@@ -88,16 +98,30 @@ fixture_partidos::=
             partidos
             fixture_partidos:resto
             {:
+                // Validar que haya exactamente 4 equipos
+                if (eq.size() != 4) {
+                    report_error("La serie " + g + " no tiene exactamente 4 equipos", null);
+                }
+
                 series.put(g, eq);
+                cantSeries++;   // Contar esta serie
+
                 System.out.println("📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
             :}
             |
             SERIE QSTRING:g
             PRE_EQUIPOS CORCHETE_IZQ equipos:eq CORCHETE_DER
-            partidos 
+            partidos
             {:
+                // Validar que haya exactamente 4 equipos
+                if (eq.size() != 4) {
+                    report_error("La serie " + g + " no tiene exactamente 4 equipos", null);
+                }
+
                 series.put(g, eq);
+                cantSeries++;   // Contar esta serie
             :};
+
 
 equipos ::= EQUIPO:n COMA equipos:resto
             {:

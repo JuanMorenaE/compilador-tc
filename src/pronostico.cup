@@ -126,11 +126,6 @@ fixture_partidos::=
                 System.out.println("\n📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
 
                 for(Partido p: part) {
-                    if (!eq.contains(p.equipoLocal) || !eq.contains(p.equipoVisitante)){
-                        report_error("El partido " + p.nro + " tiene equipos de otra serie.", null);
-                        throw new RuntimeException("Parse abortado por equipos inválidos dentro de un partido.");
-                    }
-
                     System.out.println(
                         "⚽ Partido agregado: N°" + p.nro +
                         " | " + p.equipoLocal + " " + p.golesLocal + " - " + p.golesVisitante + " " + p.equipoVisitante +
@@ -154,11 +149,6 @@ fixture_partidos::=
                 System.out.println("\n📦 Serie agregada: " + g + " Equipos: " + String.join(", ", eq) + ".");
 
                 for(Partido p: part) {
-                    if (!eq.contains(p.equipoLocal) || !eq.contains(p.equipoVisitante)){
-                        report_error("El partido " + p.nro + " tiene equipos de otra serie.", null);
-                        throw new RuntimeException("Parse abortado por equipos inválidos dentro de un partido.");
-                    }
-
                     System.out.println(
                         "⚽ Partido agregado: N°" + p.nro +
                         " | " + p.equipoLocal + " " + p.golesLocal + " - " + p.golesVisitante + " " + p.equipoVisitante +

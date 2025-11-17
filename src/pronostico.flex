@@ -58,11 +58,7 @@ Equipo =
     "Suiza" |
     "Polonia";
 
-Hora = [0-1][0-9]:[0-5][0-9] | 2[0-3]:[0-5][0-9]
-
 Numero = [0-9][0-9]*
-
-Resultado = {Numero} | [0]
 
 
 Dia2   = [0-3][0-9]
@@ -170,18 +166,10 @@ Email = [A-Za-z0-9._%+-]+@[A-Za-z]+\.[A-Za-z]+
     //System.out.println("TOKEN EQUIPO: " + yytext());
     return symbol(sym.EQUIPO, yytext());
 }
-{Hora} {
-    //System.out.println("TOKEN HORA: " + yytext());
-    return symbol(sym.HORA, yytext());
-}
 {Numero} {
     Integer numero = Integer.parseInt(yytext());
     //System.out.println("TOKEN NUMERO: " + numero);
     return symbol(sym.NUMERO, numero);
-}
-{Resultado} {
-    //System.out.println("TOKEN RESULTADO: " + yytext());
-    return symbol(sym.RESULTADO, yytext());
 }
 {Fecha} {
     //System.out.println("TOKEN FECHA: " + yytext());

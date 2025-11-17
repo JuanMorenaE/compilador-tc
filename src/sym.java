@@ -9,7 +9,7 @@ public class sym {
   public static final int TORNEO = 17;
   public static final int GUION = 10;
   public static final int DOSPUNTOS = 14;
-  public static final int EMAIL = 22;
+  public static final int EMAIL = 21;
   public static final int SERIE = 4;
   public static final int PRE_EQUIPOS = 5;
   public static final int EQUIPO = 18;
@@ -17,17 +17,16 @@ public class sym {
   public static final int SEPARADOR = 11;
   public static final int COMA = 8;
   public static final int PRE_PARTICIPANTE = 12;
-  public static final int NOMBRE = 21;
+  public static final int NOMBRE = 20;
   public static final int FIXTURE = 3;
   public static final int EOF = 0;
   public static final int CORCHETE_IZQ = 6;
-  public static final int FECHA = 20;
+  public static final int FECHA = 19;
   public static final int CORCHETE_DER = 7;
-  public static final int NUMERO = 24;
+  public static final int NUMERO = 23;
   public static final int error = 1;
-  public static final int QSTRING = 23;
+  public static final int QSTRING = 22;
   public static final int NRO_PARTIDO = 9;
-  public static final int HORA = 19;
   public static final int PRONOSTICOS = 13;
   public static final int JUEGO = 16;
   public static final int MARCA = 15;
@@ -51,7 +50,6 @@ public class sym {
   "JUEGO",
   "TORNEO",
   "EQUIPO",
-  "HORA",
   "FECHA",
   "NOMBRE",
   "EMAIL",

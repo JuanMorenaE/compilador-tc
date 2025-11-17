@@ -50,11 +50,11 @@ terminal CAMPEONATO, FIXTURE, SERIE, PRE_EQUIPOS,
          CORCHETE_IZQ, CORCHETE_DER, COMA, NRO_PARTIDO, GUION,
          SEPARADOR, PRE_PARTICIPANTE, PRONOSTICOS, DOSPUNTOS, MARCA, JUEGO;
 
-terminal String TORNEO, EQUIPO, HORA, FECHA, NOMBRE, EMAIL, QSTRING;
+terminal String TORNEO, EQUIPO, FECHA, NOMBRE, EMAIL, QSTRING;
 terminal Integer NUMERO;
 
 
-non terminal Object inicio, campeonato, fixture, fixture_partidos, serie, participante, participantes;
+non terminal Object inicio, campeonato, fixture, fixture_partidos, participante, participantes;
 non terminal Map<String, Object> pronosticos, pronostico;
 non terminal List<String> equipos;
 non terminal List<Partido> partidos;

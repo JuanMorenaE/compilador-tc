@@ -64,7 +64,24 @@ Numero = [0-9][0-9]*
 
 Resultado = {Numero} | [0]
 
-Fecha = [0-9][0-9][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]
+
+Dia2   = [0-3][0-9]
+Mes2   = [0-1][0-9]
+Anio2  = [0-9]{2}
+Anio4  = [0-9]{4}
+
+
+MesTexto = "Ene" | "Feb" | "Mar" | "Abr" | "May" | "Jun" |
+           "Jul" | "Ago" | "Sep" | "Oct" | "Nov" | "Dic"
+
+
+Fecha =
+    {Dia2}"/"{Mes2}"/"{Anio4}      |
+    {Anio4}"/"{Mes2}"/"{Dia2}      |
+    {Dia2}"\|"{Mes2}"\|"{Anio2}    |
+    {Anio4}"-"{Mes2}"-"{Dia2}      |
+    {Dia2}"-"{MesTexto}"-"{Anio4}
+
 
 Nombre = [A-Z][a-z]*
 

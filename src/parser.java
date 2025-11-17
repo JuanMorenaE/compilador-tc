@@ -169,7 +169,7 @@ public class parser extends java_cup.runtime.lr_parser {
 
     Map<Integer, Partido> partidos = new HashMap<>();
     Map<String, List<String>> series = new HashMap<>();
-    List<Participante> participantesGlobal = new ArrayList<>();
+    List<Participante> participantes = new ArrayList<>();
 
 
     // Reportes de errores
@@ -235,9 +235,9 @@ class CUP$parser$actions {
             System.out.println("\n✅ Analisis completado correctamente.");
 
             System.out.println("\n\n🏅 Ranking por puntos:");
-            Collections.sort(participantesGlobal, (p1, p2) -> Integer.compare(p2.puntaje, p1.puntaje));
+            Collections.sort(participantes, (p1, p2) -> Integer.compare(p2.puntaje, p1.puntaje));
 
-            for (Participante part: participantesGlobal) {
+            for (Participante part: participantes) {
                 System.out.println(
                     "👤 Participante: " + part.nombre + " " + part.apellido +
                     " | Puntaje: " + part.puntaje
@@ -530,7 +530,7 @@ class CUP$parser$actions {
                 throw new RuntimeException("Parse abortado por cantidad inválida de pronosticos marcados con (X).");
             }
 
-            participantesGlobal.add(p);
+            participantes.add(p);
             
             System.out.println(
                     "👤 Participante agregado: " + n + " " + a + 
@@ -574,7 +574,7 @@ class CUP$parser$actions {
                 throw new RuntimeException("Parse abortado por cantidad inválida de pronosticos marcados con (X).");
             }
 
-            participantesGlobal.add(p);
+            participantes.add(p);
             
             System.out.println(
                     "👤 Participante agregado: " + n + " " + a + 
